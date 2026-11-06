@@ -156,18 +156,6 @@ body {
     </section>
   </div>
 
-  <section class="pr-card" id="fpl-by-team">
-    <h2>Clean sheets and scoring 2+, by team</h2>
-    <p class="pr-note">For each team: how many times James predicted it, and how many of those came true.</p>
-    <div class="pr-scroll">
-      <table class="pr-table">
-        <thead><tr>
-          <th>Team</th><th class="pr-r">CS predicted</th><th class="pr-r">Kept</th><th class="pr-r">2+ predicted</th><th class="pr-r">Scored 2+</th>
-        </tr></thead>
-        <tbody id="fpl-teams"></tbody>
-      </table>
-    </div>
-  </section>
 
   <details class="pr-foot">
     <summary>How it’s counted</summary>
@@ -307,21 +295,6 @@ const MATCHES = [
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = String(T[el.dataset.t]); });
 
   const cell = (tr, text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.append(td); };
-
-  // Clean sheets and 2+ by team
-  const fpl = new Map();
-  for (const s of sides) {
-    const g = fpl.get(s.team) || { team: s.team, cs: 0, csK: 0, g2: 0, g2H: 0 };
-    if (s.csCalled) { g.cs++; if (s.csKept) g.csK++; }
-    if (s.g2Called) { g.g2++; if (s.g2Hit) g.g2H++; }
-    fpl.set(s.team, g);
-  }
-  const fplBody = document.getElementById('fpl-teams');
-  [...fpl.values()].sort((a, b) => a.team.localeCompare(b.team)).forEach((g) => {
-    const tr = document.createElement('tr');
-    cell(tr, g.team); cell(tr, g.cs, 'pr-r'); cell(tr, g.csK, 'pr-r'); cell(tr, g.g2, 'pr-r'); cell(tr, g.g2H, 'pr-r');
-    fplBody.append(tr);
-  });
 
   // By team hit rates
   const teams = new Map();
