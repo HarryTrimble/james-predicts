@@ -94,6 +94,7 @@ body {
   .pr-match .pr-club { display: flex; }
   .pr-match .pr-club + .pr-club { margin-top: .2rem; }
   .pr-hide-sm { display: none; }
+  .pr-dot { display: none; }
 }
 .pr-foot { font-size: .8rem; color: var(--muted); }
 .pr-foot summary { cursor: pointer; }
@@ -191,7 +192,7 @@ body {
     <div class="pr-wide">
       <table class="pr-table pr-league">
         <thead><tr>
-          <th class="pr-r">Pos</th><th>Team</th><th class="pr-r">P</th><th class="pr-r">W</th><th class="pr-r">D</th><th class="pr-r">L</th><th class="pr-r pr-hide-sm">GF</th><th class="pr-r pr-hide-sm">GA</th><th class="pr-r">GD</th><th class="pr-r">Pts</th><th class="pr-r">Actual</th>
+          <th class="pr-r">Pos</th><th>Team</th><th class="pr-r">P</th><th class="pr-r pr-hide-sm">W</th><th class="pr-r pr-hide-sm">D</th><th class="pr-r pr-hide-sm">L</th><th class="pr-r pr-hide-sm">GF</th><th class="pr-r pr-hide-sm">GA</th><th class="pr-r">GD</th><th class="pr-r">Pts</th><th class="pr-r">Actual</th>
         </tr></thead>
         <tbody id="league-rows"></tbody>
       </table>
@@ -382,8 +383,8 @@ const MATCHES = [
     const tr = document.createElement('tr');
     const pos = i + 1, real = realPos.get(x.team), diff = real - pos;
     cell(tr, pos, 'pr-r'); clubCell(tr, x.team);
-    for (const k of ['p', 'w', 'd', 'l']) cell(tr, x[k], 'pr-r');
-    for (const k of ['gf', 'ga']) cell(tr, x[k], 'pr-r pr-hide-sm');
+    cell(tr, x.p, 'pr-r');
+    for (const k of ['w', 'd', 'l', 'gf', 'ga']) cell(tr, x[k], 'pr-r pr-hide-sm');
     cell(tr, (x.gd > 0 ? '+' : '') + x.gd, 'pr-r');
     cell(tr, x.pts, 'pr-r pr-pts');
     const td = document.createElement('td'); td.className = 'pr-r';
