@@ -74,6 +74,10 @@ body {
 .pr-league .pr-down { color: #c2412d; }
 @media (prefers-color-scheme: dark) { .pr-league .pr-down { color: #f07a63; } }
 .pr-league tbody tr:nth-child(4) td, .pr-league tbody tr:nth-child(17) td { border-bottom: 2px solid var(--axis); }
+.pr-club { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.pr-dot { flex: 0 0 auto; width: .8rem; height: .8rem; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
+@media (prefers-color-scheme: dark) { .pr-dot { box-shadow: 0 0 0 1px rgba(255,255,255,.25); } }
+.pr-vs { color: var(--muted); margin: 0 .4rem; }
 .pr-foot { font-size: .8rem; color: var(--muted); }
 .pr-foot summary { cursor: pointer; }
 .pr-foot p { margin: .3rem 0 0; max-width: 70ch; }
@@ -314,6 +318,30 @@ const MATCHES = [
 
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = String(T[el.dataset.t]); });
 
+  // Club colours: [main, second]
+  const CLUB_COLOURS = {
+    ARS: ['#FFFFFF', '#EF0107'], AVL: ['#670E36', '#95BFE5'], BOU: ['#000000', '#DA291C'], BRE: ['#FFFFFF', '#E30613'],
+    BHA: ['#FFFFFF', '#0057B8'], CHE: ['#034694', '#FFFFFF'], COV: ['#59CBE8', '#FFFFFF'], CRY: ['#1B458F', '#C4122E'],
+    EVE: ['#003399', '#FFFFFF'], FUL: ['#FFFFFF', '#000000'], HUL: ['#F5A12D', '#000000'], IPS: ['#0044A9', '#FFFFFF'],
+    LEE: ['#FFFFFF', '#FFCD00'], LIV: ['#C8102E', '#FFFFFF'], MCI: ['#6CABDD', '#1C2C5B'], MUN: ['#DA291C', '#000000'],
+    NEW: ['#241F20', '#FFFFFF'], NFO: ['#DD0000', '#FFFFFF'], SUN: ['#EB172B', '#FFFFFF'], TOT: ['#FFFFFF', '#132257'],
+  };
+  const club = (code) => {
+    const s = document.createElement('span'); s.className = 'pr-club';
+    const d = document.createElement('span'); d.className = 'pr-dot'; d.setAttribute('aria-hidden', 'true');
+    const [a, b] = CLUB_COLOURS[code] || ['#999999', '#666666'];
+    d.style.background = `linear-gradient(180deg, ${a} 50%, ${b} 50%)`;
+    s.append(d, code); return s;
+  };
+  const clubCell = (tr, ...codes) => {
+    const td = document.createElement('td');
+    codes.forEach((c, i) => {
+      if (i) { const v = document.createElement('span'); v.className = 'pr-vs'; v.textContent = 'v'; td.append(v); }
+      td.append(club(c));
+    });
+    tr.append(td);
+  };
+
   const cell = (tr, text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.append(td); };
 
   // League tables: James' scores vs the real ones
@@ -335,7 +363,7 @@ const MATCHES = [
   jamesTable.forEach((x, i) => {
     const tr = document.createElement('tr');
     const pos = i + 1, real = realPos.get(x.team), diff = real - pos;
-    cell(tr, pos, 'pr-r'); cell(tr, x.team);
+    cell(tr, pos, 'pr-r'); clubCell(tr, x.team);
     for (const k of ['p', 'w', 'd', 'l', 'gf', 'ga']) cell(tr, x[k], 'pr-r');
     cell(tr, (x.gd > 0 ? '+' : '') + x.gd, 'pr-r');
     cell(tr, x.pts, 'pr-r pr-pts');
@@ -364,7 +392,7 @@ const MATCHES = [
     .sort((a, b) => b.rp - a.rp || b.sp - a.sp || a.team.localeCompare(b.team))
     .forEach((g) => {
       const tr = document.createElement('tr');
-      cell(tr, g.team); cell(tr, g.m, 'pr-r'); cell(tr, g.rp, 'pr-r'); cell(tr, g.sp, 'pr-r');
+      clubCell(tr, g.team); cell(tr, g.m, 'pr-r'); cell(tr, g.rp, 'pr-r'); cell(tr, g.sp, 'pr-r');
       teamBody.append(tr);
     });
 
@@ -385,7 +413,7 @@ const MATCHES = [
     rowsEl.replaceChildren();
     for (const r of scored.filter((d) => pick === 'all' || String(d.gw) === pick)) {
       const tr = document.createElement('tr');
-      cell(tr, r.gw); cell(tr, r.home + ' v ' + r.away);
+      cell(tr, r.gw); clubCell(tr, r.home, r.away);
       cell(tr, r.ph + '–' + r.pa, 'pr-c'); cell(tr, r.ah + '–' + r.aa, 'pr-c');
       cell(tr, r.result ? 'Yes' : 'No', 'pr-c ' + (r.result ? 'pr-yes' : 'pr-no'));
       cell(tr, r.score ? 'Yes' : 'No', 'pr-c ' + (r.score ? 'pr-yes' : 'pr-no'));
