@@ -77,8 +77,8 @@ body {
 @media (prefers-color-scheme: dark) { .pr-league .pr-down { color: #f07a63; } }
 .pr-league tbody tr:nth-child(4) td, .pr-league tbody tr:nth-child(17) td { border-bottom: 2px solid var(--axis); }
 .pr-club { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
-.pr-dot { flex: 0 0 auto; width: .8rem; height: .8rem; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
-@media (prefers-color-scheme: dark) { .pr-dot { box-shadow: 0 0 0 1px rgba(255,255,255,.25); } }
+.pr-dot { flex: 0 0 auto; width: .95rem; height: .95rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); }
+@media (prefers-color-scheme: dark) { .pr-dot { box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); } }
 .pr-vs { color: var(--muted); margin: 0 .4rem; }
 @media (max-width: 560px) {
   body { padding-left: max(.85rem, env(safe-area-inset-left, 0px)); padding-right: max(.85rem, env(safe-area-inset-right, 0px)); }
@@ -300,6 +300,16 @@ const MATCHES = [
   [9, "AVL", "FUL", 2, 0, 1, 1],
   [9, "LIV", "ARS", 2, 1, 0, 1],
   [9, "NEW", "EVE", 1, 1, 0, 1],
+  [10, "EVE", "COV", 1, 1, 3, 1],
+  [10, "LEE", "TOT", 1, 1, 1, 0],
+  [10, "ARS", "HUL", 3, 0, 1, 0],
+  [10, "FUL", "NEW", 2, 1, 1, 1],
+  [10, "NFO", "MCI", 0, 2, 3, 1],
+  [10, "BHA", "BRE", 1, 1, 2, 0],
+  [10, "CRY", "LIV", 1, 3, 1, 3],
+  [10, "IPS", "BOU", 1, 2, 1, 2],
+  [10, "SUN", "CHE", 0, 2, 1, 0],
+  [10, "MUN", "AVL", 2, 2, 4, 4],
 ];
 // ────────────────────────────────────────────────────────────────────────
 
@@ -336,19 +346,21 @@ const MATCHES = [
 
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = String(T[el.dataset.t]); });
 
-  // Club colours: [main, second]
+  // Club icons: one colour = solid; [left, right] = split down the middle; { top, bottom } = split across
   const CLUB_COLOURS = {
-    ARS: ['#FFFFFF', '#EF0107'], AVL: ['#670E36', '#95BFE5'], BOU: ['#000000', '#DA291C'], BRE: ['#FFFFFF', '#E30613'],
-    BHA: ['#FFFFFF', '#0057B8'], CHE: ['#034694', '#FFFFFF'], COV: ['#59CBE8', '#FFFFFF'], CRY: ['#1B458F', '#C4122E'],
-    EVE: ['#003399', '#FFFFFF'], FUL: ['#FFFFFF', '#000000'], HUL: ['#F5A12D', '#000000'], IPS: ['#0044A9', '#FFFFFF'],
-    LEE: ['#FFFFFF', '#FFCD00'], LIV: ['#C8102E', '#FFFFFF'], MCI: ['#6CABDD', '#1C2C5B'], MUN: ['#DA291C', '#000000'],
-    NEW: ['#241F20', '#FFFFFF'], NFO: ['#DD0000', '#FFFFFF'], SUN: ['#EB172B', '#FFFFFF'], TOT: ['#FFFFFF', '#132257'],
+    ARS: '#E8102A', AVL: ['#5E1A3C', '#9CC8EA'], BOU: ['#3A0B0B', '#C8102E'], BRE: ['#FFFFFF', '#D20A11'],
+    BHA: ['#4C6FD6', '#FFFFFF'], CHE: '#1F4E99', COV: ['#7FB2E5', '#FFFFFF'], CRY: ['#C8303A', '#4A6FD8'],
+    EVE: '#274488', FUL: ['#FFFFFF', '#000000'], HUL: '#F18A00', IPS: ['#1D4FA3', '#E4282E'],
+    LEE: ['#1D3F8F', '#FFE84D'], LIV: '#D62631', MCI: '#98C5E9', MUN: '#DA1B1E',
+    NEW: ['#000000', '#FFFFFF'], NFO: { top: '#E53233', bottom: '#FFFFFF' }, SUN: ['#E31B23', '#FFFFFF'], TOT: '#FFFFFF',
   };
   const club = (code) => {
     const s = document.createElement('span'); s.className = 'pr-club';
     const d = document.createElement('span'); d.className = 'pr-dot'; d.setAttribute('aria-hidden', 'true');
-    const [a, b] = CLUB_COLOURS[code] || ['#999999', '#666666'];
-    d.style.background = `linear-gradient(180deg, ${a} 50%, ${b} 50%)`;
+    const c = CLUB_COLOURS[code] || '#999999';
+    d.style.background = typeof c === 'string' ? c
+      : Array.isArray(c) ? `linear-gradient(90deg, ${c[0]} 50%, ${c[1]} 50%)`
+      : `linear-gradient(180deg, ${c.top} 50%, ${c.bottom} 50%)`;
     s.append(d, code); return s;
   };
   const clubCell = (tr, ...codes) => {
