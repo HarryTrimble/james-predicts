@@ -96,6 +96,11 @@ body {
   .pr-hide-sm { display: none; }
   .pr-dot { display: none; }
 }
+.pr-cmp td:first-child { color: var(--fg); }
+.pr-cmp td { vertical-align: top; }
+.pr-cmp .pr-best { font-weight: 600; }
+.pr-cmp .pr-n { display: block; font-size: .75rem; color: var(--muted); font-weight: 400; }
+.pr-cmp-foot { margin: .75rem 0 0; }
 .pr-foot { font-size: .8rem; color: var(--muted); }
 .pr-foot summary { cursor: pointer; }
 .pr-foot p { margin: .3rem 0 0; max-width: 70ch; }
@@ -147,6 +152,18 @@ body {
         <span class="pr-sub"><span data-t="g2_right">—</span> of the <span data-t="g2_called">—</span> times James had a team scoring 2+, it did</span>
       </div>
     </div>
+  </section>
+
+  <section class="pr-card" id="compare">
+    <h2>How James compares</h2>
+    <p class="pr-note">James against Chris Sutton’s BBC predictions and Solio Analytics’ betting-market projections, over the <span data-t="cmp_matches">—</span> games all three predicted (gameweeks 1–<span data-t="cmp_last_gw">—</span>). Best in each row in bold.</p>
+    <div class="pr-scroll">
+      <table class="pr-table pr-cmp">
+        <thead><tr><th></th><th class="pr-r">James</th><th class="pr-r">Sutton</th><th class="pr-r">Solio</th></tr></thead>
+        <tbody id="cmp-rows"></tbody>
+      </table>
+    </div>
+    <p class="pr-note pr-cmp-foot">Solio publishes projected goals rather than scores, so each projection is rounded down to whole goals (1.84 becomes 1) to judge it the same way.</p>
   </section>
 
   <section class="pr-card" id="by-gameweek">
@@ -311,6 +328,54 @@ const MATCHES = [
   [10, "SUN", "CHE", 0, 2, 1, 0],
   [10, "MUN", "AVL", 2, 2, 4, 4],
 ];
+
+// Chris Sutton (BBC): [gameweek, home, away, home goals, away goals]
+const SUTTON = [
+  [1, "ARS", "COV", 3, 0], [1, "HUL", "MUN", 1, 2], [1, "EVE", "CRY", 2, 1], [1, "IPS", "SUN", 0, 1], [1, "NFO", "LEE", 1, 1],
+  [1, "BRE", "TOT", 1, 1], [1, "BHA", "AVL", 1, 2], [1, "MCI", "BOU", 4, 1], [1, "NEW", "LIV", 1, 3], [1, "FUL", "CHE", 0, 2],
+  [2, "CRY", "MCI", 1, 3], [2, "LIV", "NFO", 2, 1], [2, "BOU", "EVE", 1, 1], [2, "COV", "HUL", 2, 0], [2, "TOT", "NEW", 2, 1],
+  [2, "CHE", "BHA", 2, 1], [2, "LEE", "BRE", 1, 1], [2, "SUN", "FUL", 1, 0], [2, "MUN", "IPS", 2, 1], [2, "AVL", "ARS", 0, 2],
+  [3, "IPS", "LIV", 1, 2], [3, "NEW", "BOU", 2, 1], [3, "BRE", "SUN", 1, 1], [3, "BHA", "LEE", 2, 1], [3, "FUL", "CRY", 1, 1],
+  [3, "MCI", "COV", 3, 0], [3, "NFO", "TOT", 1, 1], [3, "HUL", "AVL", 0, 2], [3, "EVE", "MUN", 1, 1], [3, "ARS", "CHE", 3, 1],
+  [4, "AVL", "NFO", 2, 1], [4, "BOU", "BRE", 1, 1], [4, "CHE", "HUL", 3, 0], [4, "CRY", "IPS", 2, 1], [4, "LIV", "FUL", 2, 1],
+  [4, "TOT", "EVE", 1, 1], [4, "SUN", "ARS", 0, 1], [4, "COV", "BHA", 1, 2], [4, "MUN", "MCI", 2, 2], [4, "LEE", "NEW", 1, 1],
+  [5, "BRE", "CHE", 2, 2], [5, "TOT", "AVL", 1, 2], [5, "BHA", "ARS", 1, 2], [5, "EVE", "IPS", 1, 0], [5, "NEW", "HUL", 1, 1],
+  [5, "NFO", "COV", 2, 0], [5, "BOU", "LIV", 1, 1], [5, "LEE", "CRY", 2, 0], [5, "MCI", "SUN", 2, 1], [5, "FUL", "MUN", 2, 2],
+  [6, "ARS", "LEE", 2, 0], [6, "AVL", "BRE", 2, 1], [6, "CHE", "BOU", 3, 1], [6, "IPS", "FUL", 1, 1], [6, "SUN", "BHA", 1, 1],
+  [6, "MUN", "TOT", 2, 1], [6, "CRY", "NFO", 0, 1], [6, "HUL", "EVE", 1, 1], [6, "LIV", "MCI", 1, 2], [6, "COV", "NEW", 1, 1],
+  [7, "EVE", "CHE", 1, 1], [7, "BRE", "LIV", 2, 2], [7, "FUL", "HUL", 3, 1], [7, "MCI", "IPS", 4, 0], [7, "NEW", "AVL", 2, 3],
+  [7, "BOU", "SUN", 1, 1], [7, "BHA", "CRY", 2, 1], [7, "LEE", "MUN", 5, 0], [7, "NFO", "ARS", 0, 3], [7, "TOT", "COV", 2, 1],
+  [8, "IPS", "NFO", 1, 1], [8, "AVL", "MCI", 1, 2], [8, "ARS", "EVE", 2, 0], [8, "COV", "FUL", 1, 2], [8, "CHE", "TOT", 3, 1],
+  [8, "CRY", "NEW", 2, 2], [8, "HUL", "BRE", 0, 2], [8, "LIV", "BHA", 1, 3], [8, "MUN", "BOU", 1, 2], [8, "SUN", "LEE", 1, 1],
+  [9, "CHE", "MUN", 3, 1], [9, "BOU", "LEE", 1, 1], [9, "BRE", "NFO", 1, 1], [9, "COV", "SUN", 0, 1], [9, "HUL", "IPS", 1, 2],
+  [9, "MCI", "BHA", 3, 1], [9, "TOT", "CRY", 2, 0], [9, "AVL", "FUL", 3, 1], [9, "LIV", "ARS", 0, 1], [9, "NEW", "EVE", 1, 2],
+  [10, "EVE", "COV", 2, 0], [10, "LEE", "TOT", 1, 1], [10, "ARS", "HUL", 2, 0], [10, "FUL", "NEW", 2, 1], [10, "NFO", "MCI", 1, 2],
+  [10, "BHA", "BRE", 2, 1], [10, "CRY", "LIV", 0, 2], [10, "IPS", "BOU", 1, 1], [10, "SUN", "CHE", 1, 2], [10, "MUN", "AVL", 1, 3],
+];
+
+// Solio Analytics projected goals: [gameweek, home, away, home projected, away projected]
+const SOLIO = [
+  [1, "ARS", "COV", 2.57, 0.60], [1, "EVE", "CRY", 1.46, 1.19], [1, "NFO", "LEE", 1.43, 1.21], [1, "BHA", "AVL", 1.59, 1.29], [1, "NEW", "LIV", 1.35, 1.95],
+  [1, "HUL", "MUN", 0.78, 2.22], [1, "IPS", "SUN", 1.25, 1.31], [1, "BRE", "TOT", 1.56, 1.38], [1, "MCI", "BOU", 2.34, 1.11], [1, "FUL", "CHE", 1.18, 1.80],
+  [2, "CRY", "MCI", 1.05, 1.94], [2, "BOU", "EVE", 1.57, 1.13], [2, "TOT", "NEW", 1.64, 1.42], [2, "LEE", "BRE", 1.35, 1.31], [2, "MUN", "IPS", 2.22, 0.87],
+  [2, "LIV", "NFO", 2.10, 0.97], [2, "COV", "HUL", 1.67, 1.00], [2, "CHE", "BHA", 1.86, 1.19], [2, "SUN", "FUL", 1.35, 1.18], [2, "AVL", "ARS", 0.84, 1.90],
+  [3, "IPS", "LIV", 1.13, 2.34], [3, "BRE", "SUN", 1.83, 0.93], [3, "FUL", "CRY", 1.48, 1.22], [3, "NFO", "TOT", 1.42, 1.26], [3, "EVE", "MUN", 1.30, 1.68],
+  [3, "NEW", "BOU", 1.75, 1.39], [3, "BHA", "LEE", 1.59, 1.11], [3, "MCI", "COV", 2.98, 0.70], [3, "HUL", "AVL", 1.03, 1.64], [3, "ARS", "CHE", 1.87, 1.04],
+  [4, "BOU", "BRE", 1.60, 1.49], [4, "CHE", "HUL", 2.74, 0.72], [4, "LIV", "FUL", 2.26, 1.12], [4, "SUN", "ARS", 0.74, 1.71], [4, "MUN", "MCI", 1.44, 1.81],
+  [4, "AVL", "NFO", 1.47, 1.16], [4, "CRY", "IPS", 1.76, 1.15], [4, "TOT", "EVE", 1.72, 1.21], [4, "COV", "BHA", 1.12, 1.73], [4, "LEE", "NEW", 1.50, 1.30],
+  [5, "BRE", "CHE", 1.65, 1.69], [5, "BHA", "ARS", 1.01, 1.86], [5, "NEW", "HUL", 2.02, 1.03], [5, "BOU", "LIV", 1.48, 1.81], [5, "MCI", "SUN", 2.36, 0.72],
+  [5, "TOT", "AVL", 1.69, 1.20], [5, "EVE", "IPS", 1.80, 1.07], [5, "NFO", "COV", 1.91, 0.90], [5, "LEE", "CRY", 1.84, 1.04], [5, "FUL", "MUN", 1.35, 1.81],
+  [6, "ARS", "LEE", 2.04, 0.73], [6, "CHE", "BOU", 1.93, 1.23], [6, "SUN", "BHA", 1.25, 1.49], [6, "CRY", "NFO", 1.32, 1.37], [6, "LIV", "MCI", 1.45, 1.67],
+  [6, "AVL", "BRE", 1.46, 1.55], [6, "IPS", "FUL", 1.42, 1.50], [6, "MUN", "TOT", 2.04, 1.23], [6, "HUL", "EVE", 1.09, 1.48], [6, "COV", "NEW", 1.30, 1.67],
+  [7, "EVE", "CHE", 1.40, 1.67], [7, "FUL", "HUL", 1.91, 0.97], [7, "NEW", "AVL", 1.72, 1.46], [7, "BHA", "CRY", 2.16, 1.02], [7, "NFO", "ARS", 0.86, 1.79],
+  [7, "BRE", "LIV", 1.63, 1.53], [7, "MCI", "IPS", 2.84, 0.92], [7, "BOU", "SUN", 1.53, 1.15], [7, "LEE", "MUN", 1.57, 1.37], [7, "TOT", "COV", 2.18, 0.96],
+  [8, "IPS", "NFO", 1.29, 1.56], [8, "ARS", "EVE", 1.98, 0.73], [8, "CHE", "TOT", 2.04, 1.21], [8, "HUL", "BRE", 1.06, 1.93], [8, "MUN", "BOU", 1.67, 1.34],
+  [8, "AVL", "MCI", 1.15, 2.12], [8, "COV", "FUL", 1.30, 1.57], [8, "CRY", "NEW", 1.47, 1.68], [8, "LIV", "BHA", 1.80, 1.42], [8, "SUN", "LEE", 1.15, 1.32],
+  [9, "CHE", "MUN", 1.80, 1.31], [9, "BRE", "NFO", 1.66, 1.30], [9, "HUL", "IPS", 1.29, 1.42], [9, "TOT", "CRY", 1.93, 1.03], [9, "LIV", "ARS", 1.30, 1.43],
+  [9, "BOU", "LEE", 1.55, 1.14], [9, "COV", "SUN", 1.17, 1.38], [9, "MCI", "BHA", 2.13, 1.25], [9, "AVL", "FUL", 1.66, 1.18], [9, "NEW", "EVE", 1.55, 1.37],
+  [10, "EVE", "COV", 1.84, 0.95], [10, "ARS", "HUL", 2.67, 0.53], [10, "NFO", "MCI", 1.11, 1.87], [10, "CRY", "LIV", 1.05, 2.10], [10, "SUN", "CHE", 1.15, 1.68],
+  [10, "LEE", "TOT", 1.27, 1.33], [10, "FUL", "NEW", 1.73, 1.24], [10, "BHA", "BRE", 1.88, 1.25], [10, "IPS", "BOU", 1.15, 1.73], [10, "MUN", "AVL", 1.72, 1.41],
+];
 // ────────────────────────────────────────────────────────────────────────
 
 (() => {
@@ -411,6 +476,58 @@ const MATCHES = [
     tr.append(td);
     leagueBody.append(tr);
   });
+
+  // James vs Sutton vs Solio, over the games all three predicted
+  (() => {
+    const key = (g, a, b) => g + '-' + a + '-' + b;
+    const sut = new Map(SUTTON.map(([g, a, b, x, y]) => [key(g, a, b), [x, y]]));
+    const sol = new Map(SOLIO.map(([g, a, b, x, y]) => [key(g, a, b), [Math.floor(x), Math.floor(y)]]));
+    const games = scored.filter((r) => sut.has(key(r.gw, r.home, r.away)) && sol.has(key(r.gw, r.home, r.away)));
+    const judge = (pick) => {
+      const s = { n: games.length, res: 0, sc: 0, dec: 0, rev: 0, cs: 0, csR: 0, g2: 0, g2R: 0 };
+      for (const r of games) {
+        const [ph, pa] = pick(r);
+        if (sign(ph - pa) === sign(r.ah - r.aa)) s.res++;
+        if (ph === r.ah && pa === r.aa) s.sc++;
+        if (ph !== pa) { s.dec++; if (sign(ph - pa) === -sign(r.ah - r.aa)) s.rev++; }
+        for (const [pf, pg, af, ag] of [[ph, pa, r.ah, r.aa], [pa, ph, r.aa, r.ah]]) {
+          if (pg === 0) { s.cs++; if (ag === 0) s.csR++; }
+          if (pf >= 2) { s.g2++; if (af >= 2) s.g2R++; }
+        }
+      }
+      return s;
+    };
+    const who = [
+      judge((r) => [r.ph, r.pa]),
+      judge((r) => sut.get(key(r.gw, r.home, r.away))),
+      judge((r) => sol.get(key(r.gw, r.home, r.away))),
+    ];
+    T.cmp_matches = games.length;
+    T.cmp_last_gw = games.length ? Math.max(...games.map((r) => r.gw)) : '—';
+    document.querySelectorAll('[data-t="cmp_matches"], [data-t="cmp_last_gw"]').forEach((el) => { el.textContent = String(T[el.dataset.t]); });
+    const rows = [
+      ['Result right', (s) => [s.res, s.n], false],
+      ['Score right', (s) => [s.sc, s.n], false],
+      ['Backed the wrong team (lower is better)', (s) => [s.rev, s.dec], true],
+      ['Clean sheets called right', (s) => [s.csR, s.cs], false],
+      ['Teams scoring 2+ called right', (s) => [s.g2R, s.g2], false],
+    ];
+    const body = document.getElementById('cmp-rows');
+    for (const [label, f, lowerBetter] of rows) {
+      const vals = who.map((s) => { const [a, b] = f(s); return { a, b, p: pct(a, b) }; });
+      const best = lowerBetter ? Math.min(...vals.map((v) => v.p)) : Math.max(...vals.map((v) => v.p));
+      const tr = document.createElement('tr');
+      cell(tr, label);
+      for (const v of vals) {
+        const td = document.createElement('td');
+        td.className = 'pr-r' + (v.p === best ? ' pr-best' : '');
+        td.textContent = v.p + '%';
+        const n = document.createElement('span'); n.className = 'pr-n'; n.textContent = v.a + ' of ' + v.b;
+        td.append(n); tr.append(td);
+      }
+      body.append(tr);
+    }
+  })();
 
   // By team hit rates
   const teams = new Map();
